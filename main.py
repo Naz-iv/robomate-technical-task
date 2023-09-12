@@ -1,22 +1,24 @@
 # Import necessary libraries
 import openpyxl
 import time
+import os
+import glob
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 
 # Define the main function
-def runner(default_directory):
+def runner(default_directory, rpa_webpage):
     # Initialize the WebDriver
     driver = web_driver(default_directory)
 
     # Navigate to the RPA Challenge website
-    driver.get('https://rpachallenge.com/')
+    driver.get(rpa_webpage)
 
     # Download a file from the website
     file_downloader(driver)
 
-    # Process data from an Excel workbook
-    data = workbook_processor(f"{default_directory}\challenge.xlsx")
+    # Process data from an Excel workbook to list with dictionaries
+    data = workbook_processor(default_directory)
 
     # Start the challenge on the website
     start_challenge(driver)
@@ -48,10 +50,17 @@ def file_downloader(driver):
     # Wait for a few seconds for file to download (adjust as needed)
     time.sleep(2)
 
+
+
 # Function to process data from an Excel workbook downloaded from challenge webpage
-def workbook_processor(file_path):
+def workbook_processor(default_directory):
+    # Load from default download directory last downloaded file
+    files = os.listdir(default_directory)
+    files_sorted = sorted(files, key=lambda x: os.path.getmtime(os.path.join(default_directory, x))) #sort files by modified time
+    last_downloaded_file = files_sorted[-1] # Chose last element of the list
+
     # Load the Excel workbook from a specified file path
-    workbook = openpyxl.load_workbook(file_path)
+    workbook = openpyxl.load_workbook(f"{default_directory}\{last_downloaded_file}")
     worksheet = workbook.active
 
     # Initialize data and header lists
@@ -90,17 +99,17 @@ def start_challenge(driver):
 def submit_data(data, driver):
     for item in data:
         # Fill out web forms with data from the Excel sheet
-        driver.find_element(By.XPATH, "//input[@ng-reflect-name= 'labelFirstName']").send_keys(item["First Name"])
-        driver.find_element(By.XPATH, "//input[@ng-reflect-name='labelLastName']").send_keys(item["Last Name "])
-        driver.find_element(By.XPATH, "//input[@ng-reflect-name='labelCompanyName']").send_keys(item["Company Name"])
-        driver.find_element(By.XPATH, "//input[@ng-reflect-name='labelRole']").send_keys(item["Role in Company"])
-        driver.find_element(By.XPATH, "//input[@ng-reflect-name='labelAddress']").send_keys(item["Address"])
-        driver.find_element(By.XPATH, "//input[@ng-reflect-name='labelEmail']").send_keys(item["Email"])
-        driver.find_element(By.XPATH, "//input[@ng-reflect-name='labelPhone']").send_keys(item["Phone Number"])
+        driver.find_element(By.XPATH, '//input[@ng-reflect-name="labelFirstName"]').send_keys(item["First Name"])
+        driver.find_element(By.XPATH, '//input[@ng-reflect-name="labelLastName"]').send_keys(item["Last Name "])
+        driver.find_element(By.XPATH, '//input[@ng-reflect-name="labelCompanyName"]').send_keys(item["Company Name"])
+        driver.find_element(By.XPATH, '//input[@ng-reflect-name="labelRole"]').send_keys(item["Role in Company"])
+        driver.find_element(By.XPATH, '//input[@ng-reflect-name="labelAddress"]').send_keys(item["Address"])
+        driver.find_element(By.XPATH, '//input[@ng-reflect-name="labelEmail"]').send_keys(item["Email"])
+        driver.find_element(By.XPATH, '//input[@ng-reflect-name="labelPhone"]').send_keys(item["Phone Number"])
 
         # Click the submit button on the website
         submit_button = driver.find_element(By.XPATH, '/html/body/app-root/div[2]/app-rpa1/div/div[2]/form/input')
         submit_button.click()
 
-# Call the main runner function parsing default download directory for web driver
-runner(r"C:\RPA Challenge")
+# Call the main runner function parsing default download directory for web driver and file name
+runner(r"C:\RPA Challenge", "https://rpachallenge.com/")
